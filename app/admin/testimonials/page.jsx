@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
-import { createSupabaseServerClient } from '../../../lib/supabase-server'
+import { useEffect, useState } from 'react'
 import Badge from '../../../components/ui/Badge'
 import DeleteTestimonialButton from '../../../components/forms/DeleteTestimonialButton'
+import { createSupabaseBrowserClient } from '../../../lib/supabase'
 
 function getAuthorMeta(testimonial) {
   return [testimonial.author_role, testimonial.author_company]
@@ -17,13 +20,50 @@ function getQuotePreview(quote) {
   return quote.length > 120 ? `${quote.slice(0, 120)}...` : quote
 }
 
-export default async function TestimonialsPage() {
-  const supabase = createSupabaseServerClient()
-  const { data: testimonials, error } = await supabase
-    .from('testimonials')
-    .select('*')
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+export default function TestimonialsPage() {
+  const [testimonials, setTestimonials] = useState([])
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const supabase = createSupabaseBrowserClient()
+
+    supabase
+      .from('testimonials')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!isMounted) {
+          return
+        }
+
+        if (error) {
+          setErrorMessage(error.message)
+          setTestimonials([])
+          return
+        }
+
+        setErrorMessage('')
+        setTestimonials(data ?? [])
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  function removeTestimonial(id) {
+    setTestimonials((current) =>
+      current.filter((testimonial) => testimonial.id !== id),
+    )
+  }
 
   return (
     <div>
@@ -44,13 +84,17 @@ export default async function TestimonialsPage() {
         </Link>
       </div>
 
-      {error ? (
+      {isLoading ? (
+        <p className="mt-6 text-sm text-gray-600">Loading testimonials...</p>
+      ) : null}
+
+      {!isLoading && errorMessage ? (
         <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error.message}
+          {errorMessage}
         </p>
       ) : null}
 
-      {!error && testimonials?.length === 0 ? (
+      {!isLoading && !errorMessage && testimonials.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-gray-300 p-8 text-center">
           <h2 className="text-base font-medium text-gray-950">
             No testimonials yet
@@ -61,7 +105,7 @@ export default async function TestimonialsPage() {
         </div>
       ) : null}
 
-      {!error && testimonials?.length > 0 ? (
+      {!isLoading && !errorMessage && testimonials.length > 0 ? (
         <div className="mt-6 overflow-hidden rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -122,6 +166,7 @@ export default async function TestimonialsPage() {
                       <DeleteTestimonialButton
                         id={testimonial.id}
                         authorName={testimonial.author_name}
+                        onDeleted={removeTestimonial}
                       />
                     </div>
                   </td>

@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '../../lib/supabase-server'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import LogoutButton from '../../components/layout/LogoutButton'
+import { createSupabaseBrowserClient } from '../../lib/supabase'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard' },
@@ -10,14 +13,47 @@ const navItems = [
   { href: '/admin/posts', label: 'Posts' },
 ]
 
-export default async function AdminLayout({ children }) {
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function AdminLayout({ children }) {
+  const router = useRouter()
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
 
-  if (!user) {
-    redirect('/login')
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+    let isMounted = true
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) {
+        return
+      }
+
+      if (!session) {
+        router.replace('/login')
+        return
+      }
+
+      setIsCheckingSession(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.replace('/login')
+      }
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [router])
+
+  if (isCheckingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 py-12">
+        <p className="text-sm text-gray-600">Checking session...</p>
+      </div>
+    )
   }
 
   return (

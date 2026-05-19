@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createSupabaseBrowserClient } from '../../lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -25,21 +26,14 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-        }),
+      const supabase = createSupabaseBrowserClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        setErrorMessage(result.error || 'Login failed.')
+      if (error) {
+        setErrorMessage(error.message || 'Login failed.')
         return
       }
 

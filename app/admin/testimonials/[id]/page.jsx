@@ -1,19 +1,48 @@
+'use client'
+
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '../../../../lib/supabase-server'
+import { useEffect, useState } from 'react'
 import TestimonialForm from '../../../../components/forms/TestimonialForm'
+import { createSupabaseBrowserClient } from '../../../../lib/supabase'
 
-export default async function EditTestimonialPage({ params }) {
-  const supabase = createSupabaseServerClient()
-  const { data: testimonial, error } = await supabase
-    .from('testimonials')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+export default function EditTestimonialPage({ params }) {
+  const [testimonial, setTestimonial] = useState(null)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
-  if (error || !testimonial) {
-    notFound()
-  }
+  useEffect(() => {
+    let isMounted = true
+    const supabase = createSupabaseBrowserClient()
+
+    supabase
+      .from('testimonials')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!isMounted) {
+          return
+        }
+
+        if (error) {
+          setErrorMessage(error.message)
+          setTestimonial(null)
+          return
+        }
+
+        setErrorMessage('')
+        setTestimonial(data)
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [params.id])
 
   return (
     <div>
@@ -29,7 +58,19 @@ export default async function EditTestimonialPage({ params }) {
         </h1>
       </div>
 
-      <TestimonialForm testimonial={testimonial} />
+      {isLoading ? (
+        <p className="text-sm text-gray-600">Loading testimonial...</p>
+      ) : null}
+
+      {!isLoading && errorMessage ? (
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      {!isLoading && !errorMessage && testimonial ? (
+        <TestimonialForm testimonial={testimonial} />
+      ) : null}
     </div>
   )
 }

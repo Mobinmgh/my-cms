@@ -6,7 +6,7 @@ import { createSupabaseBrowserClient } from '../../lib/supabase'
 import Button from '../ui/Button'
 import ConfirmDialog from '../ui/ConfirmDialog'
 
-export default function DeleteTestimonialButton({ id, authorName }) {
+export default function DeleteTestimonialButton({ id, authorName, onDeleted }) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -27,6 +27,11 @@ export default function DeleteTestimonialButton({ id, authorName }) {
     }
 
     setIsOpen(false)
+    if (onDeleted) {
+      onDeleted(id)
+      return
+    }
+
     router.refresh()
   }
 
