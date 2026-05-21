@@ -4,33 +4,36 @@ import { createSupabaseServerClient } from '../../lib/supabase-server'
 const dashboardSections = [
   {
     title: 'Testimonials',
+    description: 'Client proof and portfolio quotes.',
     manageHref: '/admin/testimonials',
     newHref: '/admin/testimonials/new',
     stats: [
-      { key: 'total', label: 'Total testimonials' },
-      { key: 'published', label: 'Published testimonials' },
-      { key: 'draft', label: 'Draft testimonials' },
+      { key: 'total', label: 'Total' },
+      { key: 'published', label: 'Published' },
+      { key: 'draft', label: 'Draft' },
     ],
   },
   {
     title: 'Projects',
+    description: 'Case studies and featured work.',
     manageHref: '/admin/projects',
     newHref: '/admin/projects/new',
     stats: [
-      { key: 'total', label: 'Total projects' },
-      { key: 'published', label: 'Published projects' },
-      { key: 'draft', label: 'Draft projects' },
-      { key: 'featured', label: 'Featured projects' },
+      { key: 'total', label: 'Total' },
+      { key: 'published', label: 'Published' },
+      { key: 'draft', label: 'Draft' },
+      { key: 'featured', label: 'Featured' },
     ],
   },
   {
     title: 'Posts',
+    description: 'Long-form writing and updates.',
     manageHref: '/admin/posts',
     newHref: '/admin/posts/new',
     stats: [
-      { key: 'total', label: 'Total posts' },
-      { key: 'published', label: 'Published posts' },
-      { key: 'draft', label: 'Draft posts' },
+      { key: 'total', label: 'Total' },
+      { key: 'published', label: 'Published' },
+      { key: 'draft', label: 'Draft' },
     ],
   },
 ]
@@ -94,9 +97,11 @@ async function getContentStats(supabase, tableName, includeFeatured = false) {
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="text-sm text-gray-600">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-gray-950">{value}</p>
+    <div className="rounded-md border border-[#2a2721] bg-[#171612] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d8678]">
+        {label}
+      </p>
+      <p className="mt-4 text-4xl font-semibold text-[#f0dfbd]">{value}</p>
     </div>
   )
 }
@@ -104,12 +109,12 @@ function StatCard({ label, value }) {
 function QuickLink({ href, children, variant = 'secondary' }) {
   const className =
     variant === 'primary'
-      ? 'bg-gray-950 text-white hover:bg-gray-800'
-      : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+      ? 'border-[#d7b777] bg-[#d7b777] text-[#151411] hover:bg-[#f0dfbd]'
+      : 'border-[#3a352c] bg-[#151411] text-[#d7b777] hover:border-[#d7b777] hover:bg-[#1d1a14]'
 
   return (
     <Link
-      className={`inline-flex rounded-md px-4 py-2 text-sm font-medium ${className}`}
+      className={`inline-flex rounded-md border px-4 py-2 text-sm font-semibold transition ${className}`}
       href={href}
     >
       {children}
@@ -132,29 +137,44 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-950">Dashboard</h1>
-        <p className="mt-3 text-sm leading-6 text-gray-700">
-          Content overview for testimonials, projects, and posts.
-        </p>
+      <div className="grid gap-5 border-b border-[#2a2721] pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9c8b6e]">
+            Dashboard
+          </p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-normal leading-tight text-[#f0dfbd] lg:text-5xl">
+            Content overview for the portfolio system.
+          </h1>
+        </div>
+        <div className="rounded-md border border-[#2a2721] bg-[#171612] px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d8678]">
+            Workspace
+          </p>
+          <p className="mt-2 text-lg font-semibold text-[#d7b777]">
+            MobinCMS
+          </p>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-6">
+      <div className="mt-8 grid gap-6">
         {dashboardSections.map((section) => {
           const sectionStats = statsBySection[section.title]
 
           return (
             <section
-              className="rounded-lg border border-gray-200 bg-gray-50 p-5"
+              className="rounded-lg border border-[#2a2721] bg-[#11100e] p-5 sm:p-6"
               key={section.title}
             >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-950">
+                  <h2 className="text-2xl font-semibold text-[#f0dfbd]">
                     {section.title}
                   </h2>
+                  <p className="mt-2 text-sm leading-6 text-[#8d8678]">
+                    {section.description}
+                  </p>
                   {sectionStats.error ? (
-                    <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <p className="mt-4 rounded-md border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-200">
                       {sectionStats.error}
                     </p>
                   ) : null}
@@ -169,7 +189,7 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {section.stats.map((stat) => (
                   <StatCard
                     key={stat.key}

@@ -20,7 +20,7 @@ export default function LogoutButton() {
 
   return (
     <button
-      className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400"
+      className="rounded-md border border-[#3a352c] bg-[#171612] px-4 py-2 text-sm font-medium text-[#d7b777] transition hover:border-[#d7b777] hover:bg-[#1d1a14] disabled:cursor-not-allowed disabled:text-[#6f6759]"
       type="button"
       onClick={handleLogout}
       disabled={isLoggingOut}

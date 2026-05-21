@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import LogoutButton from '../../components/layout/LogoutButton'
 import { createSupabaseBrowserClient } from '../../lib/supabase'
@@ -14,8 +14,19 @@ const navItems = [
 ]
 
 export default function AdminLayout({ children }) {
+  const pathname = usePathname()
   const router = useRouter()
   const [sessionError, setSessionError] = useState('')
+  const currentItem =
+    navItems
+      .filter((item) =>
+        item.href === '/admin'
+          ? pathname === item.href
+          : pathname.startsWith(item.href),
+      )
+      .sort((first, second) => second.href.length - first.href.length)[0] ||
+    navItems[0]
+  const isDashboard = pathname === '/admin'
 
   useEffect(() => {
     let isMounted = true
@@ -76,22 +87,26 @@ export default function AdminLayout({ children }) {
   }, [router])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link className="text-lg font-semibold text-gray-950" href="/admin">
-            MobinCMS
+    <div className="min-h-screen bg-[#0f0e0c] text-[#f0dfbd]">
+      <div className="mx-auto grid min-h-screen max-w-7xl gap-0 lg:grid-cols-[280px_1fr]">
+        <aside className="border-b border-[#2a2721] bg-[#14130f] px-5 py-5 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+          <Link className="block" href="/admin">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9c8b6e]">
+              Content Studio
+            </p>
+            <h1 className="mt-3 text-2xl font-semibold text-[#f0dfbd]">
+              MobinCMS
+            </h1>
           </Link>
-          <LogoutButton />
-        </div>
-      </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 md:grid-cols-[220px_1fr]">
-        <aside className="rounded-lg border border-gray-200 bg-white p-4">
-          <nav className="flex gap-2 md:flex-col">
+          <nav className="mt-8 grid gap-2 sm:grid-cols-4 lg:grid-cols-1">
             {navItems.map((item) => (
               <Link
-                className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-950"
+                className={`rounded-md border px-4 py-3 text-sm font-medium transition ${
+                  currentItem.href === item.href
+                    ? 'border-[#d7b777] bg-[#1d1a14] text-[#f0dfbd]'
+                    : 'border-transparent text-[#8d8678] hover:border-[#2a2721] hover:bg-[#171612] hover:text-[#f0dfbd]'
+                }`}
                 href={item.href}
                 key={item.href}
               >
@@ -101,14 +116,34 @@ export default function AdminLayout({ children }) {
           </nav>
         </aside>
 
-        <main className="rounded-lg border border-gray-200 bg-white p-6">
-          {sessionError ? (
-            <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {sessionError}
-            </p>
-          ) : null}
-          {children}
-        </main>
+        <div className="min-w-0 px-5 py-5 sm:px-6 lg:px-8 lg:py-8">
+          <header className="mb-6 flex flex-col gap-4 border-b border-[#2a2721] pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9c8b6e]">
+                {currentItem.label}
+              </p>
+              <h2 className="mt-2 text-3xl font-normal text-[#f0dfbd]">
+                Content Command Center
+              </h2>
+            </div>
+            <LogoutButton />
+          </header>
+
+          <main
+            className={`min-h-[calc(100vh-170px)] rounded-lg border p-5 shadow-2xl sm:p-6 lg:p-8 ${
+              isDashboard
+                ? 'border-[#2a2721] bg-[#14130f]'
+                : 'border-[#2a2721] bg-[#f4efe6] text-gray-950'
+            }`}
+          >
+            {sessionError ? (
+              <p className="mb-4 rounded-md border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+                {sessionError}
+              </p>
+            ) : null}
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   )
