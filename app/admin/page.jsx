@@ -35,11 +35,12 @@ const dashboardSections = [
   },
 ]
 
-async function getCount(query) {
-  const { count, error } = await query.select('*', {
+async function getCount(supabase, tableName, applyFilter = (query) => query) {
+  const query = supabase.from(tableName).select('*', {
     count: 'exact',
     head: true,
   })
+  const { count, error } = await applyFilter(query)
 
   if (error) {
     throw error
@@ -59,11 +60,17 @@ async function getContentStats(supabase, tableName, includeFeatured = false) {
 
   try {
     const [total, published, draft, featured] = await Promise.all([
-      getCount(supabase.from(tableName)),
-      getCount(supabase.from(tableName).eq('is_published', true)),
-      getCount(supabase.from(tableName).eq('is_published', false)),
+      getCount(supabase, tableName),
+      getCount(supabase, tableName, (query) =>
+        query.eq('is_published', true),
+      ),
+      getCount(supabase, tableName, (query) =>
+        query.eq('is_published', false),
+      ),
       includeFeatured
-        ? getCount(supabase.from(tableName).eq('is_featured', true))
+        ? getCount(supabase, tableName, (query) =>
+            query.eq('is_featured', true),
+          )
         : Promise.resolve(0),
     ])
 

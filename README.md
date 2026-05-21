@@ -1,11 +1,16 @@
 # MobinCMS
 
-A reusable headless CMS built with Next.js 14, Tailwind CSS, and Supabase.
+MobinCMS is a small headless CMS admin app for managing content used by Mobin's portfolio and future frontend clients. It stores content in Supabase and relies on Supabase Row Level Security for public read access and authenticated admin management.
 
-This repository currently contains Phase 1 only: the project foundation.
-Authentication, admin pages, CRUD screens, image uploads, and rich text editing are intentionally not included yet.
+## Tech Stack
 
-## Setup
+- Next.js 14 App Router
+- React
+- Tailwind CSS
+- Supabase Auth, Database, and Storage
+- TipTap for post rich text editing
+
+## Local Setup
 
 Install dependencies:
 
@@ -13,24 +18,20 @@ Install dependencies:
 npm install
 ```
 
-Create a Supabase project:
-
-1. Go to the Supabase dashboard.
-2. Create a new project.
-3. Copy the project URL and anon public key.
-
-Create your local environment file:
+Create a local environment file:
 
 ```bash
 copy .env.local.example .env.local
 ```
 
-Fill in:
+Set the required variables:
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
+
+Do not commit real Supabase keys.
 
 Run the development server:
 
@@ -38,31 +39,65 @@ Run the development server:
 npm run dev
 ```
 
-Open http://localhost:3000.
+Build for production:
 
-## Supabase Manual Setup
+```bash
+npm run build
+```
 
-Run the database schema SQL from `AGENTS.md` manually in the Supabase SQL editor.
+## Supabase Setup
 
-After that, enable Row Level Security and apply the RLS policies from `AGENTS.md`.
+### Tables
 
-The admin user is not created in this phase. It will be created manually in Supabase Auth before Phase 2 auth work is tested.
+MobinCMS expects these tables to exist:
 
-## Current Phase
+- `testimonials`
+- `projects`
+- `posts`
 
-Phase 1 Foundation:
+The schema is documented in `AGENTS.md`.
 
-- Next.js 14 App Router project structure
-- Tailwind CSS setup
-- Supabase browser client
-- Supabase server client placeholder
-- Environment variable example
+### Storage Buckets
 
-## Next Phase
+Create these Supabase Storage buckets:
 
-Phase 2 Auth:
+- `project-images`
+- `post-images`
 
-- Build `/login`
-- Connect Supabase email/password login
-- Protect `/admin/*`
-- Add logout
+Both buckets should allow public reads so portfolio/frontends can display uploaded cover images.
+
+### RLS Behavior
+
+Enable Row Level Security on all content tables.
+
+Required behavior:
+
+- Public users can read only published content.
+- Authenticated admin users can create, read, update, and delete content.
+
+In practice, public read policies should filter by `is_published = true`, and authenticated users should have full access for admin CRUD.
+
+### Admin User
+
+Create the admin user manually in Supabase:
+
+1. Open the Supabase dashboard.
+2. Go to Authentication.
+3. Create a user with email and password.
+4. Use that account to log in at `/login`.
+
+There is no public registration flow and no role management in this app.
+
+## Completed Features
+
+- Admin login and logout
+- Protected admin layout
+- Testimonials CRUD
+- Projects CRUD with cover image upload
+- Posts CRUD with TipTap rich text editing and cover image upload
+- Dashboard overview with content counts
+- Supabase-backed public content model for frontend consumption
+
+## Related App
+
+The portfolio frontend lives in `../my-portfolio`. It reads published content directly from Supabase using the anon key and RLS policies.
