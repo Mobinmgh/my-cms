@@ -87,9 +87,9 @@ export default function AdminLayout({ children }) {
   }, [router])
 
   return (
-    <div className="min-h-screen bg-[#0f0e0c] text-[#f0dfbd]">
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-0 lg:grid-cols-[280px_1fr]">
-        <aside className="border-b border-[#2a2721] bg-[#14130f] px-5 py-5 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+    <div className="min-h-screen w-full bg-[#0f0e0c] text-[#f0dfbd]">
+      <div className="grid min-h-screen w-full gap-0 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="w-full border-b border-[#2a2721] bg-[#14130f] px-5 py-5 lg:min-h-screen lg:w-[280px] lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
           <Link className="block" href="/admin">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9c8b6e]">
               Content Studio
@@ -116,7 +116,7 @@ export default function AdminLayout({ children }) {
           </nav>
         </aside>
 
-        <div className="min-w-0 px-5 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <div className="min-w-0 flex-1 px-5 py-5 sm:px-6 lg:px-8 lg:py-8">
           <header className="mb-6 flex flex-col gap-4 border-b border-[#2a2721] pb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9c8b6e]">
@@ -132,7 +132,7 @@ export default function AdminLayout({ children }) {
           <main
             className={`min-h-[calc(100vh-170px)] rounded-lg border p-5 shadow-2xl sm:p-6 lg:p-8 ${
               isDashboard
-                ? 'border-[#2a2721] bg-[#14130f]'
+                ? 'border-transparent bg-transparent p-0 shadow-none sm:p-0 lg:p-0'
                 : 'border-[#2a2721] bg-[#f4efe6] text-gray-950'
             }`}
           >

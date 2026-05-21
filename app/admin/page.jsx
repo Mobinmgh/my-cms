@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
-import { createSupabaseServerClient } from '../../lib/supabase-server'
+import { useEffect, useState } from 'react'
+import { createSupabaseBrowserClient } from '../../lib/supabase'
 
 const dashboardSections = [
   {
@@ -7,6 +10,7 @@ const dashboardSections = [
     description: 'Client proof and portfolio quotes.',
     manageHref: '/admin/testimonials',
     newHref: '/admin/testimonials/new',
+    tableName: 'testimonials',
     stats: [
       { key: 'total', label: 'Total' },
       { key: 'published', label: 'Published' },
@@ -16,8 +20,10 @@ const dashboardSections = [
   {
     title: 'Projects',
     description: 'Case studies and featured work.',
+    includeFeatured: true,
     manageHref: '/admin/projects',
     newHref: '/admin/projects/new',
+    tableName: 'projects',
     stats: [
       { key: 'total', label: 'Total' },
       { key: 'published', label: 'Published' },
@@ -30,6 +36,7 @@ const dashboardSections = [
     description: 'Long-form writing and updates.',
     manageHref: '/admin/posts',
     newHref: '/admin/posts/new',
+    tableName: 'posts',
     stats: [
       { key: 'total', label: 'Total' },
       { key: 'published', label: 'Published' },
@@ -37,6 +44,21 @@ const dashboardSections = [
     ],
   },
 ]
+
+const emptyStats = {
+  draft: 0,
+  error: '',
+  featured: 0,
+  isLoading: true,
+  published: 0,
+  total: 0,
+}
+
+function getInitialStats() {
+  return Object.fromEntries(
+    dashboardSections.map((section) => [section.title, emptyStats]),
+  )
+}
 
 async function getCount(supabase, tableName, applyFilter = (query) => query) {
   const query = supabase.from(tableName).select('*', {
@@ -52,56 +74,52 @@ async function getCount(supabase, tableName, applyFilter = (query) => query) {
   return count ?? 0
 }
 
-async function getContentStats(supabase, tableName, includeFeatured = false) {
-  const stats = {
-    draft: 0,
-    error: '',
-    featured: 0,
-    published: 0,
-    total: 0,
-  }
-
+async function getContentStats(supabase, section) {
   try {
     const [total, published, draft, featured] = await Promise.all([
-      getCount(supabase, tableName),
-      getCount(supabase, tableName, (query) =>
+      getCount(supabase, section.tableName),
+      getCount(supabase, section.tableName, (query) =>
         query.eq('is_published', true),
       ),
-      getCount(supabase, tableName, (query) =>
+      getCount(supabase, section.tableName, (query) =>
         query.eq('is_published', false),
       ),
-      includeFeatured
-        ? getCount(supabase, tableName, (query) =>
+      section.includeFeatured
+        ? getCount(supabase, section.tableName, (query) =>
             query.eq('is_featured', true),
           )
         : Promise.resolve(0),
     ])
 
     return {
-      ...stats,
       draft,
+      error: '',
       featured,
+      isLoading: false,
       published,
       total,
     }
   } catch (error) {
     return {
-      ...stats,
+      ...emptyStats,
       error:
         error instanceof Error
           ? error.message
-          : `Could not load ${tableName} stats.`,
+          : `Could not load ${section.tableName} stats.`,
+      isLoading: false,
     }
   }
 }
 
-function StatCard({ label, value }) {
+function StatCard({ isLoading, label, value }) {
   return (
     <div className="rounded-md border border-[#2a2721] bg-[#171612] p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d8678]">
         {label}
       </p>
-      <p className="mt-4 text-4xl font-semibold text-[#f0dfbd]">{value}</p>
+      <p className="mt-4 text-4xl font-semibold text-[#f0dfbd]">
+        {isLoading ? '...' : value}
+      </p>
     </div>
   )
 }
@@ -122,18 +140,32 @@ function QuickLink({ href, children, variant = 'secondary' }) {
   )
 }
 
-export default async function AdminDashboardPage() {
-  const supabase = createSupabaseServerClient()
-  const [testimonials, projects, posts] = await Promise.all([
-    getContentStats(supabase, 'testimonials'),
-    getContentStats(supabase, 'projects', true),
-    getContentStats(supabase, 'posts'),
-  ])
-  const statsBySection = {
-    Posts: posts,
-    Projects: projects,
-    Testimonials: testimonials,
-  }
+export default function AdminDashboardPage() {
+  const [statsBySection, setStatsBySection] = useState(getInitialStats)
+
+  useEffect(() => {
+    let isMounted = true
+    const supabase = createSupabaseBrowserClient()
+
+    async function loadStats() {
+      const entries = await Promise.all(
+        dashboardSections.map(async (section) => [
+          section.title,
+          await getContentStats(supabase, section),
+        ]),
+      )
+
+      if (isMounted) {
+        setStatsBySection(Object.fromEntries(entries))
+      }
+    }
+
+    loadStats()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   return (
     <div>
@@ -192,6 +224,7 @@ export default async function AdminDashboardPage() {
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {section.stats.map((stat) => (
                   <StatCard
+                    isLoading={sectionStats.isLoading}
                     key={stat.key}
                     label={stat.label}
                     value={sectionStats.error ? '-' : sectionStats[stat.key]}
