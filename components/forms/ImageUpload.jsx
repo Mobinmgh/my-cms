@@ -12,7 +12,13 @@ function sanitizeFileName(fileName) {
     .replace(/[^a-z0-9.-]/g, '')
 }
 
-export default function ImageUpload({ imageUrl, onChange }) {
+export default function ImageUpload({
+  bucketName = 'project-images',
+  imageUrl,
+  onChange,
+  pathPrefix = 'projects',
+  previewAlt = 'Cover image preview',
+}) {
   const [errorMessage, setErrorMessage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
 
@@ -33,9 +39,9 @@ export default function ImageUpload({ imageUrl, onChange }) {
     setIsUploading(true)
 
     const supabase = createSupabaseBrowserClient()
-    const filePath = `projects/${Date.now()}-${sanitizeFileName(file.name)}`
+    const filePath = `${pathPrefix}/${Date.now()}-${sanitizeFileName(file.name)}`
     const { error } = await supabase.storage
-      .from('project-images')
+      .from(bucketName)
       .upload(filePath, file)
 
     if (error) {
@@ -46,7 +52,7 @@ export default function ImageUpload({ imageUrl, onChange }) {
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from('project-images').getPublicUrl(filePath)
+    } = supabase.storage.from(bucketName).getPublicUrl(filePath)
 
     onChange(publicUrl)
     setIsUploading(false)
@@ -57,7 +63,7 @@ export default function ImageUpload({ imageUrl, onChange }) {
       {imageUrl ? (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
           <img
-            alt="Project cover preview"
+            alt={previewAlt}
             className="h-48 w-full object-cover"
             src={imageUrl}
           />
