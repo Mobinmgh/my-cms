@@ -11,10 +11,15 @@ export default function TestimonialForm({ testimonial }) {
   const router = useRouter()
   const isEditing = Boolean(testimonial?.id)
   const [formData, setFormData] = useState({
-    author_name: testimonial?.author_name || '',
-    author_role: testimonial?.author_role || '',
-    author_company: testimonial?.author_company || '',
-    quote: testimonial?.quote || '',
+    author_name_en: testimonial?.author_name_en || testimonial?.author_name || '',
+    author_name_fa: testimonial?.author_name_fa || '',
+    author_role_en: testimonial?.author_role_en || testimonial?.author_role || '',
+    author_role_fa: testimonial?.author_role_fa || '',
+    author_company_en:
+      testimonial?.author_company_en || testimonial?.author_company || '',
+    author_company_fa: testimonial?.author_company_fa || '',
+    quote_en: testimonial?.quote_en || testimonial?.quote || '',
+    quote_fa: testimonial?.quote_fa || '',
     is_published: testimonial?.is_published || false,
     sort_order: testimonial?.sort_order ?? 0,
   })
@@ -32,23 +37,41 @@ export default function TestimonialForm({ testimonial }) {
     event.preventDefault()
     setErrorMessage('')
 
-    if (!formData.author_name.trim()) {
-      setErrorMessage('Author name is required.')
+    if (!formData.author_name_en.trim()) {
+      setErrorMessage('English author name is required.')
       return
     }
 
-    if (!formData.quote.trim()) {
-      setErrorMessage('Quote is required.')
+    if (!formData.quote_en.trim()) {
+      setErrorMessage('English quote is required.')
+      return
+    }
+
+    if (!formData.author_name_fa.trim()) {
+      setErrorMessage('Persian author name is required.')
+      return
+    }
+
+    if (!formData.quote_fa.trim()) {
+      setErrorMessage('Persian quote is required.')
       return
     }
 
     setIsSubmitting(true)
 
     const payload = {
-      author_name: formData.author_name.trim(),
-      author_role: formData.author_role.trim() || null,
-      author_company: formData.author_company.trim() || null,
-      quote: formData.quote.trim(),
+      author_name: formData.author_name_en.trim(),
+      author_name_en: formData.author_name_en.trim(),
+      author_name_fa: formData.author_name_fa.trim(),
+      author_role: formData.author_role_en.trim() || null,
+      author_role_en: formData.author_role_en.trim() || null,
+      author_role_fa: formData.author_role_fa.trim() || null,
+      author_company: formData.author_company_en.trim() || null,
+      author_company_en: formData.author_company_en.trim() || null,
+      author_company_fa: formData.author_company_fa.trim() || null,
+      quote: formData.quote_en.trim(),
+      quote_en: formData.quote_en.trim(),
+      quote_fa: formData.quote_fa.trim(),
       is_published: formData.is_published,
       sort_order: Number(formData.sort_order) || 0,
     }
@@ -73,50 +96,121 @@ export default function TestimonialForm({ testimonial }) {
 
   return (
     <form className="max-w-2xl space-y-5" onSubmit={handleSubmit}>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Author name
-        </label>
-        <Input
-          type="text"
-          value={formData.author_name}
-          onChange={(event) => updateField('author_name', event.target.value)}
-        />
-      </div>
+      <section className="rounded-lg border border-gray-200 p-5">
+        <h2 className="text-lg font-semibold text-gray-950">English</h2>
+        <div className="mt-5 space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Author name
+            </label>
+            <Input
+              type="text"
+              value={formData.author_name_en}
+              onChange={(event) =>
+                updateField('author_name_en', event.target.value)
+              }
+            />
+          </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Author role
-          </label>
-          <Input
-            type="text"
-            value={formData.author_role}
-            onChange={(event) => updateField('author_role', event.target.value)}
-          />
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Author role
+              </label>
+              <Input
+                type="text"
+                value={formData.author_role_en}
+                onChange={(event) =>
+                  updateField('author_role_en', event.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Author company
+              </label>
+              <Input
+                type="text"
+                value={formData.author_company_en}
+                onChange={(event) =>
+                  updateField('author_company_en', event.target.value)
+                }
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Quote
+            </label>
+            <Textarea
+              value={formData.quote_en}
+              onChange={(event) => updateField('quote_en', event.target.value)}
+            />
+          </div>
         </div>
+      </section>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Author company
-          </label>
-          <Input
-            type="text"
-            value={formData.author_company}
-            onChange={(event) =>
-              updateField('author_company', event.target.value)
-            }
-          />
+      <section className="rounded-lg border border-gray-200 p-5">
+        <h2 className="text-lg font-semibold text-gray-950">Persian</h2>
+        <div className="mt-5 space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Author name
+            </label>
+            <Input
+              dir="rtl"
+              type="text"
+              value={formData.author_name_fa}
+              onChange={(event) =>
+                updateField('author_name_fa', event.target.value)
+              }
+            />
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Author role
+              </label>
+              <Input
+                dir="rtl"
+                type="text"
+                value={formData.author_role_fa}
+                onChange={(event) =>
+                  updateField('author_role_fa', event.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Author company
+              </label>
+              <Input
+                dir="rtl"
+                type="text"
+                value={formData.author_company_fa}
+                onChange={(event) =>
+                  updateField('author_company_fa', event.target.value)
+                }
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Quote
+            </label>
+            <Textarea
+              dir="rtl"
+              value={formData.quote_fa}
+              onChange={(event) => updateField('quote_fa', event.target.value)}
+            />
+          </div>
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Quote</label>
-        <Textarea
-          value={formData.quote}
-          onChange={(event) => updateField('quote', event.target.value)}
-        />
-      </div>
+      </section>
 
       <div className="grid gap-5 md:grid-cols-2">
         <div>

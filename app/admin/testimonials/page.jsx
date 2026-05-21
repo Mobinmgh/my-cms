@@ -6,18 +6,73 @@ import Badge from '../../../components/ui/Badge'
 import DeleteTestimonialButton from '../../../components/forms/DeleteTestimonialButton'
 import { createSupabaseBrowserClient } from '../../../lib/supabase'
 
-function getAuthorMeta(testimonial) {
-  return [testimonial.author_role, testimonial.author_company]
+function getEnglishAuthor(testimonial) {
+  return testimonial.author_name_en || testimonial.author_name || ''
+}
+
+function getPersianAuthor(testimonial) {
+  return testimonial.author_name_fa || ''
+}
+
+function getEnglishMeta(testimonial) {
+  return [
+    testimonial.author_role_en || testimonial.author_role,
+    testimonial.author_company_en || testimonial.author_company,
+  ]
     .filter(Boolean)
     .join(' at ')
 }
 
-function getQuotePreview(quote) {
-  if (!quote) {
-    return ''
-  }
+function getPersianMeta(testimonial) {
+  return [testimonial.author_role_fa, testimonial.author_company_fa]
+    .filter(Boolean)
+    .join('، ')
+}
 
-  return quote.length > 120 ? `${quote.slice(0, 120)}...` : quote
+function getEnglishQuote(testimonial) {
+  return testimonial.quote_en || testimonial.quote || ''
+}
+
+function getPersianQuote(testimonial) {
+  return testimonial.quote_fa || ''
+}
+
+function TestimonialLanguageBlock({
+  author,
+  dir,
+  emptyMessage,
+  label,
+  meta,
+  quote,
+}) {
+  const hasContent = author || meta || quote
+
+  return (
+    <div
+      className="rounded-lg border border-gray-200 bg-white p-4"
+      dir={dir}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
+          {label}
+        </span>
+      </div>
+
+      {hasContent ? (
+        <div className="mt-4">
+          <p className="font-semibold text-gray-950">{author}</p>
+          {meta ? <p className="mt-1 text-sm text-gray-600">{meta}</p> : null}
+          {quote ? (
+            <p className="mt-4 line-clamp-4 text-sm leading-6 text-gray-700">
+              {quote}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-gray-500">{emptyMessage}</p>
+      )}
+    </div>
+  )
 }
 
 export default function TestimonialsPage() {
@@ -106,74 +161,58 @@ export default function TestimonialsPage() {
       ) : null}
 
       {!isLoading && !errorMessage && testimonials.length > 0 ? (
-        <div className="mt-6 overflow-hidden rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Author
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Quote
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Sort
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {testimonials.map((testimonial) => (
-                <tr key={testimonial.id}>
-                  <td className="px-4 py-4 align-top">
-                    <p className="font-medium text-gray-950">
-                      {testimonial.author_name}
-                    </p>
-                    {getAuthorMeta(testimonial) ? (
-                      <p className="mt-1 text-sm text-gray-600">
-                        {getAuthorMeta(testimonial)}
-                      </p>
-                    ) : null}
-                  </td>
-                  <td className="max-w-md px-4 py-4 align-top text-sm leading-6 text-gray-700">
-                    {getQuotePreview(testimonial.quote)}
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <Badge
-                      variant={
-                        testimonial.is_published ? 'published' : 'draft'
-                      }
-                    >
-                      {testimonial.is_published ? 'Published' : 'Draft'}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 align-top text-sm text-gray-700">
-                    {testimonial.sort_order}
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-                        href={`/admin/testimonials/${testimonial.id}`}
-                      >
-                        Edit
-                      </Link>
-                      <DeleteTestimonialButton
-                        id={testimonial.id}
-                        authorName={testimonial.author_name}
-                        onDeleted={removeTestimonial}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          {testimonials.map((testimonial) => (
+            <article
+              className="rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-sm"
+              key={testimonial.id}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={testimonial.is_published ? 'published' : 'draft'}
+                  >
+                    {testimonial.is_published ? 'Published' : 'Draft'}
+                  </Badge>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
+                    Sort {testimonial.sort_order}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    href={`/admin/testimonials/${testimonial.id}`}
+                  >
+                    Edit
+                  </Link>
+                  <DeleteTestimonialButton
+                    id={testimonial.id}
+                    authorName={getEnglishAuthor(testimonial)}
+                    onDeleted={removeTestimonial}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                <TestimonialLanguageBlock
+                  author={getEnglishAuthor(testimonial)}
+                  dir="ltr"
+                  emptyMessage="English version missing"
+                  label="EN"
+                  meta={getEnglishMeta(testimonial)}
+                  quote={getEnglishQuote(testimonial)}
+                />
+                <TestimonialLanguageBlock
+                  author={getPersianAuthor(testimonial)}
+                  dir="rtl"
+                  emptyMessage="Persian version missing"
+                  label="FA"
+                  meta={getPersianMeta(testimonial)}
+                  quote={getPersianQuote(testimonial)}
+                />
+              </div>
+            </article>
+          ))}
         </div>
       ) : null}
     </div>
