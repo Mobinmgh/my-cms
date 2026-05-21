@@ -15,46 +15,65 @@ const navItems = [
 
 export default function AdminLayout({ children }) {
   const router = useRouter()
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [sessionError, setSessionError] = useState('')
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
     let isMounted = true
+    let subscription
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) {
-        return
+    async function checkSession() {
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+
+        if (!isMounted) {
+          return
+        }
+
+        if (error) {
+          setSessionError(error.message)
+          return
+        }
+
+        if (!session) {
+          router.replace('/login')
+          return
+        }
+
+        setSessionError('')
+
+        const authListener = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            if (event === 'SIGNED_OUT' || !currentSession) {
+              router.replace('/login')
+            }
+          },
+        )
+
+        subscription = authListener.data.subscription
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setSessionError(
+          error instanceof Error
+            ? error.message
+            : 'Could not verify the current session.',
+        )
       }
+    }
 
-      if (!session) {
-        router.replace('/login')
-        return
-      }
-
-      setIsCheckingSession(false)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.replace('/login')
-      }
-    })
+    checkSession()
 
     return () => {
       isMounted = false
-      subscription.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [router])
-
-  if (isCheckingSession) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 py-12">
-        <p className="text-sm text-gray-600">Checking session...</p>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,6 +102,11 @@ export default function AdminLayout({ children }) {
         </aside>
 
         <main className="rounded-lg border border-gray-200 bg-white p-6">
+          {sessionError ? (
+            <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              {sessionError}
+            </p>
+          ) : null}
           {children}
         </main>
       </div>
