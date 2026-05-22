@@ -11,6 +11,7 @@ const navItems = [
   { href: '/admin/testimonials', label: 'Testimonials' },
   { href: '/admin/projects', label: 'Projects' },
   { href: '/admin/posts', label: 'Posts' },
+  { href: '/admin/contact-submissions', label: 'Contact' },
 ]
 
 export default function AdminLayout({ children }) {
@@ -99,7 +100,7 @@ export default function AdminLayout({ children }) {
             </h1>
           </Link>
 
-          <nav className="mt-8 grid gap-2 sm:grid-cols-4 lg:grid-cols-1">
+          <nav className="mt-8 grid gap-2 sm:grid-cols-5 lg:grid-cols-1">
             {navItems.map((item) => (
               <Link
                 className={`rounded-md border px-4 py-3 text-sm font-medium transition ${
